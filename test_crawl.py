@@ -41,15 +41,31 @@ class TestCrawl(unittest.TestCase):
 
     # Function incomplete, so we will just test the stubs for now
     def test_get_heading_from_html(self):
-        html = "<html><head><title>Test</title></head><body><h1>Heading</h1></body></html>"
-        expected = "Heading"
+        html = f"""<html>
+                    <body>
+                        <h1>Welcome to Boot.dev</h1>
+                        <main>
+                        <p>Learn to code by building real projects.</p>
+                        <p>This is the second paragraph.</p>
+                        </main>
+                    </body>
+                </html>"""
+        expected = "Welcome to Boot.dev"
         result = get_heading_from_html(html)
         self.assertEqual(result, expected)
 
     # Function incomplete, so we will just test the stubs for now
     def test_get_first_paragraph_from_html(self):
-        html = "<html><head><title>Test</title></head><body><p>Paragraph 1</p><p>Paragraph 2</p></body></html>"
-        expected = ["Paragraph 1"]
+        html = f"""<html>
+                        <body>
+                            <h1>Welcome to Boot.dev</h1>
+                            <main>
+                            <p>Learn to code by building real projects.</p>
+                            <p>This is the second paragraph.</p>
+                            </main>
+                        </body>
+                    </html>"""
+        expected = ["Learn to code by building real projects."]
         result = get_first_paragraph_from_html(html)
         self.assertEqual(result, expected)
 
