@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup, Tag
 from urllib.parse import urlsplit, SplitResult
 
 def normalize_url(url: str) -> str:
@@ -6,8 +7,18 @@ def normalize_url(url: str) -> str:
     path = parsed.path.rstrip("/")
     return f"{host}{path}"
 
+# temporary stub for the get_heading_from_html function
+def get_heading_from_html(html: str) -> str:
+    return ""
+
+# temporary stub for the get_first_paragraph_from_html function
+def get_first_paragraph_from_html(html: str) -> list[str]:
+    return []
+
 def strip_default_port(parsed: SplitResult) -> str:
-    if (parsed.scheme == "http" and parsed.port == 80) or \
-       (parsed.scheme == "https" and parsed.port == 443):
-        return parsed.hostname or ""
-    return parsed.netloc
+    netloc = parsed.netloc
+    if parsed.scheme == "http" and netloc.endswith(":80"):
+        return netloc[:-3]
+    if parsed.scheme == "https" and netloc.endswith(":443"):
+        return netloc[:-4]
+    return netloc
