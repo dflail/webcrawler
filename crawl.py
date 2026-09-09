@@ -7,13 +7,11 @@ def normalize_url(url: str) -> str:
     path = parsed.path.rstrip("/")
     return f"{host}{path}"
 
-# temporary stub for the get_heading_from_html function
 def get_heading_from_html(html: str) -> str:
     soup = BeautifulSoup(html, "html.parser")
     h_tag = soup.find(["h1", "h2", "h3", "h4", "h5", "h6"])
     return h_tag.get_text(strip=True) if isinstance(h_tag, Tag) else ""
 
-# temporary stub for the get_first_paragraph_from_html function
 def get_first_paragraph_from_html(html: str) -> list[str]:
     soup = BeautifulSoup(html, "html.parser")
     main_section = soup.find("main")
