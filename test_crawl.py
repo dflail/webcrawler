@@ -39,7 +39,6 @@ class TestCrawl(unittest.TestCase):
         expected = "boot.dev"
         self.assertEqual(actual, expected)
 
-    # Function incomplete, so we will just test the stubs for now
     def test_get_heading_from_html_basic(self) -> None:
         input_body = "<html><body><h1>Test Title</h1></body></html>"
         actual = get_heading_from_html(input_body)
