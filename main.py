@@ -1,11 +1,15 @@
-# Main entry point for the web crawler application
-# from crawl import normalize_url
+import sys
 
 
 def main():
-    print("Welcome to the web crawler!")
-    # print(normalize_url("https://www.boot.dev/blog/path"))
-
+    if len(sys.argv) < 2:
+        print("no website provided")
+        sys.exit(1)
+    elif len(sys.argv) > 2:
+        print("too many arguments provided")
+        sys.exit(1)
+    else:
+        print(f"starting crawl of {sys.argv[1]}")
 
 if __name__ == "__main__":
     main()
