@@ -1,6 +1,6 @@
 import sys
 
-from crawl import get_html
+from crawl import crawl_page, get_html
 
 
 def main() -> None:
@@ -16,13 +16,12 @@ def main() -> None:
 
     print(f"starting crawl of: {base_url}...")
 
-    try:
-        html = get_html(base_url)
-    except Exception as e:
-        print(f"Error fetching HTML from {base_url}: {str(e)}")
-        sys.exit(1)
+    # CONTINUE HERE!  FIGURE OUT WHY len(page_data) is 0 when I run this script with a valid URL.  It should be > 0 if the crawl is successful.
+    page_data = crawl_page(base_url)
+    print(f"Found {len(page_data)} pages:")
 
-    print(html)
+    for page in page_data.values():
+        print(f"- {page['url']}: {len(page['outgoing_links'])} outgoing links")
 
     sys.exit(0)
 

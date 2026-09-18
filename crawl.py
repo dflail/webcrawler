@@ -12,6 +12,37 @@ class PageData(TypedDict):
     outgoing_links: list[str]
     image_urls: list[str]
 
+def crawl_page(
+        base_url: str,
+        current_url: str | None=None,
+        page_data: dict[str, PageData] | None = None
+    ) -> dict[str, PageData]:
+
+    if current_url is None:
+        current_url = base_url
+
+    if page_data is None:
+        page_data = {}
+        
+    if urlsplit(base_url).netloc == urlsplit(current_url).netloc:
+        normalized_url = normalize_url(current_url)
+        if normalized_url in page_data:
+            return page_data
+        try:
+            html = get_html(current_url)
+            print(f"Crawling: {current_url}")
+        except Exception as e:
+            print(f"Error fetching {current_url}: {e}")
+            return page_data
+        
+
+        page_info = extract_page_data(html, current_url)
+        page_data[normalized_url] = page_info
+
+        for link in page_info["outgoing_links"]:
+            crawl_page(base_url, link, page_data)
+    else:
+        return page_data
 
 def normalize_url(url: str) -> str:
     parsed_url = urlsplit(url)
