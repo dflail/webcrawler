@@ -13,10 +13,9 @@ def main() -> None:
         sys.exit(1)
 
     base_url = args[1]
-
+    
     print(f"starting crawl of: {base_url}...")
 
-    # CONTINUE HERE!  FIGURE OUT WHY len(page_data) is 0 when I run this script with a valid URL.  It should be > 0 if the crawl is successful.
     page_data = crawl_page(base_url)
     print(f"Found {len(page_data)} pages:")
 

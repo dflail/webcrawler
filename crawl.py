@@ -41,6 +41,8 @@ def crawl_page(
 
         for link in page_info["outgoing_links"]:
             crawl_page(base_url, link, page_data)
+            
+        return page_data
     else:
         return page_data
 
