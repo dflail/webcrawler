@@ -1,6 +1,9 @@
-from bs4 import BeautifulSoup, Tag
 from typing import TypedDict
-from urllib.parse import urljoin, urlsplit, SplitResult
+from urllib.parse import urljoin, urlsplit
+
+import requests
+from bs4 import BeautifulSoup, Tag
+
 
 class PageData(TypedDict):
     url: str
@@ -9,29 +12,50 @@ class PageData(TypedDict):
     outgoing_links: list[str]
     image_urls: list[str]
 
-def extract_page_data(html: str, page_url: str) -> PageData:
-    heading = get_heading_from_html(html)
-    first_paragraph = get_first_paragraph_from_html(html)
-    img_urls = get_images_from_html(html, page_url)
 
-    return PageData(
-        url=page_url,
-        heading=heading,
-        first_paragraph=first_paragraph,
-        outgoing_links=get_urls_from_html(html, page_url),
-        image_urls=img_urls,
-    )
+def normalize_url(url: str) -> str:
+    parsed_url = urlsplit(url)
+    full_path = f"{parsed_url.netloc}{parsed_url.path}"
+    full_path = full_path.rstrip("/")
+    return full_path.lower()
+
 
 def get_heading_from_html(html: str) -> str:
     soup = BeautifulSoup(html, "html.parser")
-    h_tag = soup.find(["h1", "h2", "h3", "h4", "h5", "h6"])
+    h_tag = soup.find("h1") or soup.find("h2")
     return h_tag.get_text(strip=True) if isinstance(h_tag, Tag) else ""
 
-def get_first_paragraph_from_html(html: str) -> list[str]:
+
+def get_first_paragraph_from_html(html: str) -> str:
     soup = BeautifulSoup(html, "html.parser")
+
     main_section = soup.find("main")
-    first_p = main_section.find("p") if isinstance(main_section, Tag) else soup.find("p")
+    if isinstance(main_section, Tag):
+        first_p = main_section.find("p")
+    else:
+        first_p = soup.find("p")
+
     return first_p.get_text(strip=True) if isinstance(first_p, Tag) else ""
+
+
+def get_urls_from_html(html: str, base_url: str) -> list[str]:
+    urls = []
+    soup = BeautifulSoup(html, "html.parser")
+    anchors = soup.find_all("a")
+
+    for anchor in anchors:
+        if not isinstance(anchor, Tag):
+            continue
+        href = anchor.get("href")
+        if isinstance(href, str) and href:
+            try:
+                absolute_url = urljoin(base_url, href)
+                urls.append(absolute_url)
+            except Exception as e:
+                print(f"{str(e)}: {href}")
+
+    return urls
+
 
 def get_images_from_html(html: str, base_url: str) -> list[str]:
     image_urls = []
@@ -51,27 +75,28 @@ def get_images_from_html(html: str, base_url: str) -> list[str]:
 
     return image_urls
 
-def get_urls_from_html(html, base_url):
-    soup = BeautifulSoup(html, "html.parser")
-    urls = []
-    for a_tag in soup.find_all("a", href=True):
-        href = a_tag["href"]
-        if href.startswith("http://") or href.startswith("https://"):
-            urls.append(href)
-        elif href.startswith("/"):
-            urls.append(base_url + href)
-    return urls
 
-def normalize_url(url: str) -> str:
-    parsed = urlsplit(url)
-    host = strip_default_port(parsed).lower()
-    path = parsed.path.rstrip("/")
-    return f"{host}{path}"
+def extract_page_data(html: str, page_url: str) -> PageData:
+    return {
+        "url": page_url,
+        "heading": get_heading_from_html(html),
+        "first_paragraph": get_first_paragraph_from_html(html),
+        "outgoing_links": get_urls_from_html(html, page_url),
+        "image_urls": get_images_from_html(html, page_url),
+    }
 
-def strip_default_port(parsed: SplitResult) -> str:
-    netloc = parsed.netloc
-    if parsed.scheme == "http" and netloc.endswith(":80"):
-        return netloc[:-3]
-    if parsed.scheme == "https" and netloc.endswith(":443"):
-        return netloc[:-4]
-    return netloc
+
+def get_html(url: str) -> str:
+    try:
+        response = requests.get(url, headers={"User-Agent": "BootCrawler/1.0"})
+    except Exception as e:
+        raise Exception(f"network error while fetching {url}: {e}")
+
+    if response.status_code > 399:
+        raise Exception(f"got HTTP error: {response.status_code} {response.reason}")
+
+    content_type = response.headers.get("content-type", "")
+    if "text/html" not in content_type:
+        raise Exception(f"got non-HTML response: {content_type}")
+
+    return response.text
