@@ -1,9 +1,49 @@
+from asyncio import Lock, Semaphore
 from typing import TypedDict
 from urllib.parse import urljoin, urlsplit
-
-import requests
+from aiohttp import ClientSession
 from bs4 import BeautifulSoup, Tag
 
+import requests
+
+
+class AsyncCrawler:
+
+    def __init__(self, base_url: str, max_concurrency: int = 5):
+        self.base_url = base_url
+        self.base_domain = urlsplit(base_url).netloc
+        self.page_data: dict[str, PageData] = {}
+        self.visited: set[str] = set()
+        self.lock = Lock()
+        self.max_concurrency = max_concurrency
+        self.semaphore = Semaphore(max_concurrency)
+        self.session: ClientSession | None = None
+
+        async def __aenter__(self):
+            self.session = ClientSession()
+            return self
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            await self.session.close()
+
+        async def add_page_visit(self, normalized_url):
+            async with self.lock:
+                if normalized_url in self.visited:
+                    return False
+                self.visited.add(normalized_url)
+                return True
+        #<-----------------------------------------------------------------[ RESUME HERE ]
+        # async def get_html(self, url: str) -> str:
+        #     if self.session is None:
+        #         raise RuntimeError("Session not initialized. Use 'async with' context.")
+        #     async with self.semaphore:
+        #         async with self.session.get(url, headers={"User-Agent": "BootCrawler/1.0"}) as response:
+        #             if response.status > 399:
+        #                 raise Exception(f"got HTTP error: {response.status} {response.reason}")
+        #             content_type = response.headers.get("content-type", "")
+        #             if "text/html" not in content_type:
+        #                 raise Exception(f"got non-HTML response: {content_type}")
+        #             return await response.text()
 
 class PageData(TypedDict):
     url: str
@@ -41,7 +81,7 @@ def crawl_page(
 
         for link in page_info["outgoing_links"]:
             crawl_page(base_url, link, page_data)
-            
+
         return page_data
     else:
         return page_data
