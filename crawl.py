@@ -83,40 +83,6 @@ async def crawl_site_async(base_url: str) -> dict[str, PageData]:
     async with AsyncCrawler(base_url) as crawler:
         return await crawler.crawl()
 
-# def crawl_page(
-#         base_url: str,
-#         current_url: str | None=None,
-#         page_data: dict[str, PageData] | None = None
-#     ) -> dict[str, PageData]:
-
-#     if current_url is None:
-#         current_url = base_url
-
-#     if page_data is None:
-#         page_data = {}
-        
-#     if urlsplit(base_url).netloc == urlsplit(current_url).netloc:
-#         normalized_url = normalize_url(current_url)
-#         if normalized_url in page_data:
-#             return page_data
-#         try:
-#             html = get_html(current_url)
-#             print(f"Crawling: {current_url}")
-#         except Exception as e:
-#             print(f"Error fetching {current_url}: {e}")
-#             return page_data
-        
-
-#         page_info = extract_page_data(html, current_url)
-#         page_data[normalized_url] = page_info
-
-#         for link in page_info["outgoing_links"]:
-#             crawl_page(base_url, link, page_data)
-
-#         return page_data
-#     else:
-#         return page_data
-
 def normalize_url(url: str) -> str:
     parsed_url = urlsplit(url)
     full_path = f"{parsed_url.netloc}{parsed_url.path}"
@@ -188,19 +154,3 @@ def extract_page_data(html: str, page_url: str) -> PageData:
         "outgoing_links": get_urls_from_html(html, page_url),
         "image_urls": get_images_from_html(html, page_url),
     }
-
-
-# def get_html(url: str) -> str:
-#     try:
-#         response = requests.get(url, headers={"User-Agent": "BootCrawler/1.0"})
-#     except Exception as e:
-#         raise Exception(f"network error while fetching {url}: {e}")
-
-#     if response.status_code > 399:
-#         raise Exception(f"got HTTP error: {response.status_code} {response.reason}")
-
-#     content_type = response.headers.get("content-type", "")
-#     if "text/html" not in content_type:
-#         raise Exception(f"got non-HTML response: {content_type}")
-
-#     return response.text
